@@ -1,0 +1,18 @@
+<map>
+    <cells>
+      <cell row="1" col= "A" />
+      <cell row="1" col= "B" />
+      <cell row="1" col= "C" />
+      <cell row="2" col= "A" />
+      <cell row="2" col= "C" />
+      <cell row="2" col= "D" />
+      <cell row="3" col= "A" />
+      <cell row="3" col= "C" />		
+      <cell row="4" col= "A" />
+      <cell row="4" col= "B" />
+      <cell row="4" col= "C" />
+      <cell row="4" col= "D" />		
+    </cells>	
+    <start-point row="1" col= "B" />
+    <end-point row="4" col= "B" />
+</map>

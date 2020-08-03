@@ -32,13 +32,13 @@ def generate_dict_shortest_paths(shortest_paths):
 # generate dictionary with all shortest routes and execution time in ms
 
 
-def generate_output_file_content(shortest_paths, start_time):
-    output_file_content = {}
+def generate_task_solution_file_content(shortest_paths, start_time):
+    task_solution_file_content = {}
     # diff between current time on the end of execution and time on start of program execution
     # time() return value in seconds
-    output_file_content["execution_time_in_ms"] = ((time() - start_time) * 1000)
-    output_file_content['paths'] = shortest_paths
-    return output_file_content
+    task_solution_file_content["execution_time_in_ms"] = ((time() - start_time) * 1000)
+    task_solution_file_content['paths'] = shortest_paths
+    return task_solution_file_content
 
 
 def parse_map_description_lines(lines):
@@ -120,136 +120,58 @@ def parse_point(splitted_line, point_name):
     return row_number, col_number
 
 
+# user only gave path to the map description file as command line argument
+if len(argv) == 2:
+    map_description_file_path = argv[1]
+    task_solution_file_path = 'shortest_paths.json'
+# user gave path to the map description file as second command line argument
+# user gave path to the map task solution file as third command line argument
+elif len(argv) == 3:
+    map_description_file_path = argv[1]
+    task_solution_file_path = argv[2]
+# user didn't give paths as command line arguments
+else:
+    map_description_file_path = input("Enter path to map description file : ")
+    task_solution_file_path = input("""Enter path for task solution file with shortest paths 
+    (Optional - press Enter to skip step) : """) or "shortest_paths.json"
 # time at the start of algorithm
 start_time = time()
 
-# map description file and possible solution file paths are received as command line arguments
-# case when only map description file is given
-if len(argv) == 2:
-    # argv[0] is script path, argv[1] is map description file path
-    try:
-        with open(argv[1], "r") as map_description_file:
-            map_description_lines = map_description_file.readlines()
-    except PermissionError:
-        print("There is no permission to read map description file")
-        exit()
-    except FileNotFoundError:
-        print("Map description file which is given with path as second command line argument is not found")
-        exit()
-    try:
-        adjacency_list, source, destination = parse_map_description_lines(map_description_lines)
-    except ValueError as v:
-        print(v)
-        exit()
-    # result is dictionary where key-value pair is vertex and array of his parent
-    # over which is the shortest distance from the source vertex
-    bfs_result = adjacency_list.bfs(source)
-    # will be populated with lists of shortest paths as a result of all_shortest_paths function
-    shortest_paths = []
-    # helper list for all_shortest_path function
-    current_shortest_path = []
-    # populate shortest_paths list
-    adjacency_list.all_shortest_paths(shortest_paths, current_shortest_path, bfs_result, source, destination)
-    # case when there is no shortest path
-    if len(shortest_paths) == 0:
-        print('There is no shortest path between these two vertices')
-    else:
-        dict_shortest_paths = generate_dict_shortest_paths(shortest_paths)
-        output_file_content = generate_output_file_content(dict_shortest_paths, start_time)
-        try:
-            with open("shortest_paths.json", "w") as output_file:
-                # save as json
-                dump(output_file_content, output_file, indent=4)
-                print(f"Path of output file: {Path(output_file.name).absolute()}")
-        except PermissionError:
-            print("There is no permission to write result with shortest paths to the file in this directory. Please move script to other directory")
-
-# case when are given and map description file and possible solution as command line arguments
-elif len(argv) == 3:
-    try:
-        # argv[1] is map description file path
-        with open(argv[1], "r") as map_description_file:
-            map_description_lines = map_description_file.readlines()
-    except PermissionError:
-        print("There is no permission to read map description file")
-        exit()
-    except FileNotFoundError:
-        print("Map description file which is given with path as second command line argument is not found")
-        exit()
-    try:
-        # argv[2] is the path to possible solution file
-        with open(argv[2], "r") as possible_solution_file:
-            possible_solution_parsed = load(possible_solution_file)
-    except PermissionError:
-        print("There is no permission to read possible solution file")
-        exit()
-    except FileNotFoundError:
-        print("Possible solution file which is given with path as third command line argument is not found. This file and optional and you could try again without")
-        exit()
-    try:
-        adjacency_list, source, destination = parse_map_description_lines(map_description_lines)
-    except ValueError as v:
-        print(v)
-        exit()
-    # result is dictionary where key-value pair is vertex and array of his parent
-    # over which is the shortest distance from the source vertex
-    bfs_result = adjacency_list.bfs(source)
-    # will be populated with lists of shortest paths as a result of all_shortest_paths function
-    shortest_paths = []
-    # helper list for all_shortest_path function
-    current_shortest_path = []
-    # populate shortest_paths list
-    adjacency_list.all_shortest_paths(shortest_paths, current_shortest_path, bfs_result, source, destination)
-    # case when there is no shortest path
-    if len(shortest_paths) == 0:
-        print('There is no shortest path between these two vertices')
-    else:
-        dict_shortest_paths = generate_dict_shortest_paths(shortest_paths)
-        # length of paths list from user's solution
-        number_of_user_shortest_paths = len(possible_solution_parsed["paths"])
-        # length of paths list which our algorithm generated
-        number_of_app_generated_shortest_paths = len(dict_shortest_paths)
-        # this will be set to True if user provided at list one shortest path
-        found_at_least_one = False
-        # this will be set to True if user provided all shortest paths
-        found_all = True
-        # iterating through shortest paths generated from app
-        for current_shortest_path_app in dict_shortest_paths:
-            # this will be set to True if user provided this path in his solution
-            found_this = False
-            # iteratig through user's shortest paths
-            for current_shortest_path_user in possible_solution_parsed["paths"]:
-                # == checks for equality between dictionaries in this keys
-                # only path with right order from source to destination are valid
-                if current_shortest_path_app["points"] == current_shortest_path_user["points"]:
-                    if not found_at_least_one:
-                        found_at_least_one = True
-                    found_this = True
-                    # path found in user's path, break inner loop
-                    break
-            # break outer loop if at least one path user didn't provide and at least one correct user did provide
-            if not found_this:
-                found_all = False
-            if not found_all and found_at_least_one:
-                break
-        # second condition checks if the user has in addition to all valid and a excess in the form of an invalid path
-        if found_all and number_of_app_generated_shortest_paths == number_of_user_shortest_paths:
-            print("Excellent! Your solution is completely correct")
-            exit()
-        # if user's solution is partially corrent or completely incorrect print a message
-        # and path to complete solution provided by our app
-        if found_at_least_one:
-            print("Your solution is partially correct, you can find all shortest paths in result file.")
-        else:
-            print("Your solution is wrong, you can find all shortest paths in result file.")
-        output_file_content = generate_output_file_content(dict_shortest_paths, start_time)
-        try:
-            with open("shortest_paths.json", "w") as output_file:
-                # save as json
-                dump(output_file_content, output_file, indent=4)
-                print(f"Path of result file: {Path(output_file.name).absolute()}")
-        except PermissionError:
-            print("There is no permission to write result with shortest paths to the file in this directory. Please move script to other directory")
+try:
+    with open(map_description_file_path, "r") as map_description_file:
+        map_description_lines = map_description_file.readlines()
+except PermissionError:
+    print(f"There is no permission to read map description file {map_description_file_path}")
+    exit()
+except FileNotFoundError:
+    print(f"Map description file on path {map_description_file_path} is not found")
+    exit()
+try:
+    adjacency_list, source, destination = parse_map_description_lines(map_description_lines)
+except ValueError as v:
+    print(v)
+    exit()
+# result is dictionary where key-value pair is vertex and array of his parent
+# over which is the shortest distance from the source vertex
+bfs_result = adjacency_list.bfs(source)
+# will be populated with lists of shortest paths as a result of all_shortest_paths function
+shortest_paths = []
+# helper list for all_shortest_path function
+current_shortest_path = []
+# populate shortest_paths list
+adjacency_list.all_shortest_paths(shortest_paths, current_shortest_path, bfs_result, source, destination)
+# case when there is no shortest path
+if len(shortest_paths) == 0:
+    print('There is no shortest path between these two vertices')
 else:
-    # given invalid number of command line arguments
-    print("App execution is possible as two arguments (second argument is the path to map description file) or three arguments (third argument is the path to possible solution)")
+    dict_shortest_paths = generate_dict_shortest_paths(shortest_paths)
+    task_solution_file_content = generate_task_solution_file_content(dict_shortest_paths, start_time)
+    try:
+        with open(task_solution_file_path, "w") as task_solution_file:
+            # save as json
+            dump(task_solution_file_content, task_solution_file, indent=4)
+            print(f"Path of task solution file: {Path(task_solution_file.name).absolute()}")
+    except PermissionError:
+        print(f"There is no permission to write result with shortest paths to the file {task_solution_file_path}")
+    except FileNotFoundError:
+        print(f"One or more directory on path {task_solution_file_path} for task solution file not exist")
