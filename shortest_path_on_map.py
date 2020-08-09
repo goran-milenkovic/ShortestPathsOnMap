@@ -43,9 +43,9 @@ def generate_task_solution_file_content(shortest_paths, start_time):
 
 def parse_map_description_lines(lines):
     # checks for validation of open and closed tag in file
-    if lines[0] != "<map>\n":
+    if not "<map>" in lines[0]:
         raise ValueError("Map description file must start with open tag <map>")
-    if lines[-1] != "</map>\n" and lines[-1] != "</map>":
+    if not "</map>" in lines[-1]:
         raise ValueError("Map description file must end with close tag </map>")
 
     # passing cell lines to new function for parsing and if everything is okay retrieving generated adjacency list
@@ -71,10 +71,9 @@ def parse_map_description_lines(lines):
 def parse_input_cells(lines):
     # adjacency list initialization
     adjacency_list = Graph()
-    # validation also checks for valid intend with four spaces
-    if lines[1] != "    <cells>\n":
+    if not "<cells>" in lines[1]:
         raise ValueError("Cells in map description file must start with open tag <cells>")
-    if lines[-4] != '    </cells>\t\n' and lines[-4] != '    </cells>\n':
+    if not '</cells>' in lines[-4]:
         raise ValueError("Cells in map description file must end with close tag </cells>")
     # passing lines which starts with <cell to other function and return values inserting into adjacency list
     for cell in lines[2:-4]:
@@ -143,7 +142,8 @@ start_time = time()
 
 try:
     with open(map_description_file_path, "r") as map_description_file:
-        map_description_lines = map_description_file.readlines()
+        # exclude empty lines
+        map_description_lines = [line for line in map_description_file.readlines() if line.strip()]
 except PermissionError:
     print(f"There is no permission to read map description file {map_description_file_path}")
     exit()
