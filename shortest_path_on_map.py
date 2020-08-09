@@ -60,7 +60,11 @@ def parse_map_description_lines(lines):
 
     # generating source and destination vertex from start and end points
     source = Vertex(start_point_row_number, start_point_col_number)
+    if not source in adjacency_list.adjacency_list:
+        raise ValueError(f"Map description file doesn't contain start point ({start_point_row_number},{chr(start_point_col_number+64)})")
     destination = Vertex(end_point_row_number, end_point_col_number)
+    if not destination in adjacency_list.adjacency_list:
+        raise ValueError(f"Map description file doesn't contain end point ({end_point_row_number},{chr(end_point_col_number+64)})")
     return adjacency_list, source, destination
 
 
